@@ -11,6 +11,7 @@ begin
     gem.homepage = "http://github.com/lfborjas/webtagger"
     gem.authors = ["lfborjas"]
     gem.add_development_dependency "thoughtbot-shoulda", ">= 0"
+    gem.add_dependency "httparty", "0.6.1"
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
   Jeweler::GemcutterTasks.new
