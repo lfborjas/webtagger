@@ -1,6 +1,34 @@
 = webtagger
 
-Description goes here.
+Webtagger is a simple ruby gem that uses the web intelligence to extract important terms in texts, suitable for tagging them, finding the main subject or automatically building queries.
+
+It depends on {httparty}[http://github.com/jnunemaker/httparty] and uses the following external APIs:
+* {Yahoo term extraction}[http://developer.yahoo.com/search/content/V1/termExtraction.html]
+* {Tag-the-net}[http://tagthe.net]
+* {Alchemy API}[http://www.alchemyapi.com/api/keyword/textc.html]
+
+And it's written to support any API in the future. 
+
+==Installation
+    gem install webtagger
+
+==Usage
+
+Ok, little caveat here, you might need an API-key for some of the services, so you might want to run 
+    webtagger configure
+
+To get instructions on how to get and save the API keys. Or, you can pass them in the tagging method, like this
+    tags = WebTagger.tag(text, service="yahoo", token="YOUR-API-KEY")
+
+Besides that pickle, the standard usage is really simple:
+    require 'webtagger'
+    text = "Hi, I'm text"
+    #you can use the default service (tagthe)
+    tags = WebTagger.tag(text)
+    #or choose whichever you want, if it isn't supported, falls back to the default, so you don't have
+    #to be on the look for exceptions
+    tags = WebTagger.tag(text, service="yahoo")
+    
 
 == Note on Patches/Pull Requests
  
