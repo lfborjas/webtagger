@@ -5,12 +5,12 @@
 
 Gem::Specification.new do |s|
   s.name = %q{webtagger}
-  s.version = "0.1.0"
+  s.version = "0.1.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["lfborjas"]
   s.date = %q{2010-08-28}
-  s.description = %q{Use webtagger to hace easy access to keyword extraction web services (tagthe.net, yahoo and alchemy)}
+  s.description = %q{Use webtagger to use keyword extraction web services (yahoo, tagthe and alchemy) to extract from a text terms suitable for tagging, summarization, query building, etc.}
   s.email = %q{me@lfborjas.com}
   s.executables = ["webtagger", "webtagger"]
   s.extra_rdoc_files = [
