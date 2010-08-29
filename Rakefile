@@ -5,7 +5,7 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "webtagger"
-    gem.summary = %Q{Tag text with web services}
+    gem.summary = %Q{Use some popular web services to extract keywords from text}
     gem.description = %Q{Use webtagger to hace easy access to keyword extraction web services (tagthe.net, yahoo and alchemy)}
     gem.email = "me@lfborjas.com"
     gem.homepage = "http://github.com/lfborjas/webtagger"
