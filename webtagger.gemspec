@@ -28,7 +28,8 @@ Gem::Specification.new do |s|
      "lib/httparty_icebox.rb",
      "lib/webtagger.rb",
      "test/helper.rb",
-     "test/test_webtagger.rb"
+     "test/test_webtagger.rb",
+     "webtagger.gemspec"
   ]
   s.homepage = %q{http://github.com/lfborjas/webtagger}
   s.rdoc_options = ["--charset=UTF-8"]
