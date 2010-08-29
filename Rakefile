@@ -7,11 +7,12 @@ begin
     gem.name = "webtagger"
     gem.summary = %Q{Tag text with web services}
     gem.description = %Q{Use webtagger to hace easy access to keyword extraction web services (tagthe.net, yahoo and alchemy)}
-    gem.email = "luis.borjas@escolarea.com"
+    gem.email = "me@lfborjas.com"
     gem.homepage = "http://github.com/lfborjas/webtagger"
     gem.authors = ["lfborjas"]
     gem.add_development_dependency "thoughtbot-shoulda", ">= 0"
     gem.add_dependency "httparty", "0.6.1"
+    gem.executables << 'webtagger'
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
   Jeweler::GemcutterTasks.new

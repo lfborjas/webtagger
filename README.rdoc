@@ -15,7 +15,7 @@ And it's written to support any API in the future.
 ==Usage
 
 Ok, little caveat here, you might need an API-key for some of the services, so you might want to run 
-    webtagger configure
+    webtagger configure [service=token]
 
 To get instructions on how to get and save the API keys. Or, you can pass them in the tagging method, like this
     tags = WebTagger.tag(text, service="yahoo", token="YOUR-API-KEY")
@@ -27,8 +27,12 @@ Besides that pickle, the standard usage is really simple:
     tags = WebTagger.tag(text)
     #or choose whichever you want, if it isn't supported, falls back to the default, so you don't have
     #to be on the look for exceptions
-    tags = WebTagger.tag(text, service="yahoo")
+    tags = WebTagger.tag(text,"yahoo")
+
+If something funny happens when calling an API, a `WebTaggerException` will be raised, and the instance of it will count with a `response` attribute to see what the original error response was. P.e
     
+If a http error happens (404, 500, etc), `nil` will be returned.
+   
 
 == Note on Patches/Pull Requests
  
