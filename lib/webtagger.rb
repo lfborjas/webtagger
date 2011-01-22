@@ -49,7 +49,7 @@ module WebTagger
         include HTTParty::Icebox
         format :json
         base_uri "http://search.yahooapis.com/ContentAnalysisService/V1"
-        cache :store => 'memory', :timeout => 1
+        cache :store => 'memory', :timeout => 60
         
         def self.tag(text, token)
             raise "Token missing!" unless token
@@ -69,7 +69,7 @@ module WebTagger
         include HTTParty::Icebox
         format :json
         base_uri "http://access.alchemyapi.com/calls/text"
-        cache :store => 'memory', :timeout => 1
+        cache :store => 'memory', :timeout => 60
         
         def self.tag(text, token)
             raise "Token missing!" unless token
@@ -94,7 +94,7 @@ module WebTagger
         include HTTParty::Icebox
         format :json
         base_uri "http://tagthe.net/api"
-        cache :store => 'memory', :timeout => 1
+        cache :store => 'memory', :timeout => 60
         
         def self.tag(text)
             resp = post("/", :query => {:text => text, :view=>'json'} )
