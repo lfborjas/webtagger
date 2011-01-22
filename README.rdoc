@@ -13,7 +13,6 @@ And it's written to support any API in the future.
 
 ==Usage
 
-Besides that pickle, the standard usage is really simple:
     require 'webtagger'
     text = "Hi, I'm text"
     #you simply call the appropriate method:
