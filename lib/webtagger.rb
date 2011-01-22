@@ -1,11 +1,11 @@
-%w{net/http json digest/md5}.each{|m| require m }
+%w{net/http json simple_cache}.each{|m| require m }
 
 #Class for extracting keywords from text. Uses the tagthe, yahoo and alchemyAPI web services.
 #it uses caching to avoid being throttled by the apis, via the httparty_icebox gem
 class WebTagger
 
     #one of these days, gotta add filesystem cache
-    @@cache = {}
+    @@cache = SimpleCache::MemoryCache.new
     #Macro for creating a provider-specific tagger
     def self.tags_with(service, options={}, &callback)
         opts = {:uri => "",
@@ -23,7 +23,7 @@ class WebTagger
             #hack the block: using the star operator we can get an empty second param without fuss
             define_method("tag_with_#{service.to_s}") do | text, *tokens |
 
-                text_digest = Digest::MD5.hexdigest service.to_s+text
+                text_digest = service.to_s+text
                 callback.call(@@cache[text_digest]) unless @@cache[text_digest].nil?
 
                 query = {opts[:text_param] => text}.merge(opts[:extra_params])
