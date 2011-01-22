@@ -2,10 +2,9 @@
 
 Webtagger is a simple ruby gem that uses the web intelligence to extract important terms in texts, suitable for tagging them, finding the main subject or automatically building queries.
 
-It depends on {httparty}[http://github.com/jnunemaker/httparty] and uses the following external APIs:
 * {Yahoo term extraction}[http://developer.yahoo.com/search/content/V1/termExtraction.html]
-* {Tag-the-net}[http://tagthe.net]
-* {Alchemy API}[http://www.alchemyapi.com/api/keyword/textc.html]
+* {Tag-the-net}[http://tagthe.net] (Needs and API key!)
+* {Alchemy API}[http://www.alchemyapi.com/api/keyword/textc.html] (Needs an API key!)
 
 And it's written to support any API in the future. 
 
@@ -14,29 +13,19 @@ And it's written to support any API in the future.
 
 ==Usage
 
-Ok, little caveat here, you might need an API-key for some of the services, so you might want to run 
-    webtagger --configure
-
-To set or update your API keys
-Or, you can pass them in the tagging method, like this
-    tags = WebTagger.tag(text, "yahoo", "YOUR-API-KEY")
-
 Besides that pickle, the standard usage is really simple:
     require 'webtagger'
     text = "Hi, I'm text"
-    #you can use the default service (tagthe)
-    tags = WebTagger.tag(text)
-    #or choose whichever you want, if it isn't supported, falls back to the default, so you don't have
-    #to be on the look for exceptions
-    tags = WebTagger.tag(text,"yahoo")
+    #you simply call the appropriate method:
+    tags = WebTagger.tag_with_tagthe(text)
+    #some APIs might need an api key, pass that as the second parameter
+    tags = WebTagger.tag_with_yahoo(text, "YOUR-API-KEY")
+    
 
 WebTagger uses caching so rest assured you won't be throttled by the API providers.
 
-If something funny happens when calling an API, a +WebTaggerException+ will be raised, and the instance of it will count with a +response+ attribute to see what the original error response was.
-    
-If a http error happens (404, 500, etc), +nil+ will be returned.
+If something funny happens (a 4XX or 5XX response is returned), nil will be returned.
    
-
 == Note on Patches/Pull Requests
  
 * Fork the project.
