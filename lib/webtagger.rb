@@ -1,133 +1,82 @@
-require 'fileutils'
-require 'httparty'
-require 'httparty_icebox'
+%w{net/http json digest/md5}.each{|m| require m }
 
-#Module for extracting keywords from text. Uses the tagthe, yahoo and alchemyAPI web services.
-#Because the yahoo and alchemy services require an API key, a command line utility is provided
-#to add those tokens for subsequent uses of the modules, storing them in <tt>~/.webtagger</tt>
+#Class for extracting keywords from text. Uses the tagthe, yahoo and alchemyAPI web services.
 #it uses caching to avoid being throttled by the apis, via the httparty_icebox gem
-module WebTagger
-    
-    #The services supported by this version
-    SERVICES = ['yahoo', 'alchemy', 'tagthe']
-    
-    #A generic exception to handle api call errors
-    class WebTaggerError < RuntimeError
-        attr :response
-        def initialize(resp)
-            @response = resp
-        end
-    end
-    
-    #Get the persisted token for a service, if no service is provided, all tokens are returned in a hash
-    #Params:
-    #+service+:: the service for which the token should be retrieved, must be one of SERVICES
-    def get_token(service="")
-        service = service.strip.downcase
-        conf = File.join(ENV['HOME'], '.webtagger')
-        return nil unless File.exist? conf
-        srvcs = {}
-        File.open(conf).each do |service_conf|
-            s, t = service_conf.split(/\s*=\s*/) rescue next
-            srvcs[s.strip.downcase] = t.strip
-        end
+class WebTagger
 
-        return case 
-        when service == "all"
-            srvcs
-        when (SERVICES.include?(service) and srvcs[service])
-            srvcs[service]
-        else
-            nil
-        end
-    end
-    
-    #Class to access the 
-    #{yahoo term extraction web service}[http://developer.yahoo.com/search/content/V1/termExtraction.html]
-    class Yahoo
-        include HTTParty
-        include HTTParty::Icebox
-        format :json
-        base_uri "http://search.yahooapis.com/ContentAnalysisService/V1"
-        cache :store => 'memory', :timeout => 60
-        
-        def self.tag(text, token)
-            raise "Token missing!" unless token
-            resp = post("/termExtraction", :query => {:appid => token, :context => text, :output=>'json'} )
-            if resp.has_key?('ResultSet')
-                return resp['ResultSet']['Result'] || []
-            else
-                raise WebTaggerError.new(resp), "Error in API call"
-            end
-        end
-    end
-    
-    #Class for accessing the
-    #{alchemy keyword extraction service}[http://www.alchemyapi.com/api/keyword/textc.html]
-    class Alchemy
-        include HTTParty
-        include HTTParty::Icebox
-        format :json
-        base_uri "http://access.alchemyapi.com/calls/text"
-        cache :store => 'memory', :timeout => 60
-        
-        def self.tag(text, token)
-            raise "Token missing!" unless token
-            resp = post("/TextGetRankedKeywords", :query => {:apikey => token, :text => text, :outputMode=>'json'} )
-            if resp['status'] != 'ERROR'
-                #it's a hash array of [{:text=>"", :relevance=>""}]
-                kws = []
-                resp['keywords'].each do |m|
-                    kws.push m["text"]
-                end
-                return kws
-            else
-                raise WebTaggerError.new(resp), "Error in API call"
-            end          
-        end
-    end
-    
-    #class for accesing the 
-    #{tagthe API}[http://tagthe.net/fordevelopers]
-    class Tagthe 
-        include HTTParty
-        include HTTParty::Icebox
-        format :json
-        base_uri "http://tagthe.net/api"
-        cache :store => 'memory', :timeout => 60
-        
-        def self.tag(text)
-            resp = post("/", :query => {:text => text, :view=>'json'} )
-            if resp.has_key?('memes') and resp['memes'][0].has_key?('dimensions') \
-                and resp['memes'][0]['dimensions'].has_key?('topic')
+    #one of these days, gotta add filesystem cache
+    @@cache = {}
+    #Macro for creating a provider-specific tagger
+    def self.tags_with(service, options={}, &callback)
+        opts = {:uri => "",
+                :use_tokens=>true,
+                :cache=>true, 
+                :json=>true,
+                :method=>:post,
+                :text_param=>"text",
+                :token_param=>"",
+                :extra_params=>{} }.merge(options)
                 
-                return resp['memes'][0]['dimensions']['topic']
-            else
-                return []
+        #use the meta-class to inject a static method in this class
+        (class << self; self; end).instance_eval do
+
+            #hack the block: using the star operator we can get an empty second param without fuss
+            define_method("tag_with_#{service.to_s}") do | text, *tokens |
+
+                text_digest = Digest::MD5.hexdigest service.to_s+text
+                callback.call(@@cache[text_digest]) unless @@cache[text_digest].nil?
+
+                query = {opts[:text_param] => text}.merge(opts[:extra_params])
+                query[opts[:token_param]] = *tokens if opts[:use_tokens]
+
+                r = Net::HTTP.post_form URI.parse(opts[:uri]), query
+
+                response = if opts[:json] then JSON.parse(r.body) else r.body end
+                if (100..399) === r.code.to_i
+                    @@cache[text_digest] = response
+                    callback.call(response)
+                else
+                    callback.call(nil)
+                end
             end
         end
     end
+
+    Boilerplate = {:yahoo=>{:uri=>"http://search.yahooapis.com/ContentAnalysisService/V1/termExtraction",
+                            :token_param=>"appid",
+                            :text_param=>"context",
+                            :extra_params=>{:output=>"json"}
+                            },
+                   :alchemy=>{
+                            :uri =>  "http://access.alchemyapi.com/calls/text/TextGetRankedKeywords",
+                            :token_param => "apikey",
+                            :extra_params=>{:outputMode => "json"}
+                            },
+                   :tagthe=>{:uri=>"http://tagthe.net/api",
+                             :extra_params=>{:view=>"json"}
+                            }
+                  }
+
+    tags_with :yahoo, Boilerplate[:yahoo] do |r|
+        r['ResultSet']['ResultSet'] if r and r['ResultSet']
+    end
     
-    #Method for obtaining keywords in a text
-    #Params:
-    #+text+:: a +String+, the text to tag
-    #+service+(optional):: a +String+, the name of the service to use, defaults to tagthe and must be one of SERVICES
-    #+token+(optional):: a token to use for calling the service (tagthe doesn't need one), keep in mind that this value,
-    #superseeds the one stored in +~/.webtagger+ and that, due to caching, might not be used if the request is done
-    #less than a minute after the last one with a different token
-    def tag(text,service="tagthe",token=nil)
-        service = service.strip.downcase
-        token = get_token(service) unless token
-        return case
-            when service == "yahoo"
-                Yahoo.tag(text, token)
-            when service == "alchemy"
-                Alchemy.tag(text, token)
-            else
-                Tagthe.tag(text)
-        end
+    tags_with :alchemy, Boilerplate[:alchemy] do |resp|
+        if resp['status'] != 'ERROR'
+            #it's a hash array of [{:text=>"", :relevance=>""}]
+            kws = []
+            resp['keywords'].each do |m|
+                kws.push m["text"]
+            end
+            kws
+        end          
     end
 
-    module_function :tag
-    module_function :get_token
+    tags_with :tagthe, Boilerplate[:tagthe] do |resp|
+        if resp.has_key?('memes') and resp['memes'][0].has_key?('dimensions') \
+            and resp['memes'][0]['dimensions'].has_key?('topic')
+            
+            resp['memes'][0]['dimensions']['topic']
+        end
+    end
 end #of webtagger module
