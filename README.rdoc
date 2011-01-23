@@ -19,6 +19,12 @@ And it's written to support any API in the future.
     tags = WebTagger.tag_with_tagthe(text)
     #some APIs might need an api key, pass that as the second parameter
     tags = WebTagger.tag_with_yahoo(text, "YOUR-API-KEY")
+    #you can also "OR" results together: the first service that responds will be the overall result
+    tags = WebTagger.tag_with_yahoo_or_tagthe_or_alchemy text, {:yahoo=>"YOUR_YAHOO_KEY", :alchemy=>"ALCHEMY_KEY"}
+    #and you can of course "AND" results together: call all of the services:
+    tags = WebTagger.tag_with_yahoo_and_tagthe_and_alchemy text, {:yahoo=>"YOUR_YAHOO_KEY", :alchemy=>"ALCHEMY_KEY"}
+    #however, you can't combine them: this is EXACTLY THE SAME as above :(
+    tags = WebTagger.tag_with_yahoo_and_tagthe_or_alchemy text, {:yahoo=>"YOUR_YAHOO_KEY", :alchemy=>"ALCHEMY_KEY"}
     
 
 WebTagger uses caching so rest assured you won't be throttled by the API providers.
