@@ -8,6 +8,8 @@ file_opener = lambda {|service| File.open("#{File.dirname(__FILE__)}/fixtures/#{
 FakeWeb.register_uri(:post, "http://tagthe.net/api", :body=>file_opener.call("tagthe"))
 FakeWeb.register_uri(:post, "http://access.alchemyapi.com/calls/text/TextGetRankedKeywords",
                      :body=>file_opener.call("alchemy"))
+FakeWeb.register_uri(:post, "http://search.yahooapis.com/ContentAnalysisService/V1/termExtraction",
+                     :body=>file_opener.call("yahoo"))
 
 # Requires supporting files with custom matchers and macros, etc,
 # in ./support/ and its subdirectories.

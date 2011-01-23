@@ -79,4 +79,45 @@ class WebTagger
             resp['memes'][0]['dimensions']['topic']
         end
     end
+    
+    #Following good practices as stated here: 
+    #http://technicalpickles.com/posts/using-method_missing-and-respond_to-to-create-dynamic-methods/
+    #Always define respond_to and method_missing together, and define missing methods when they are 
+    #first invoked
+    def self.respond_to?(m_sym, include_private=false)
+        !!(m_sym.to_s =~ /^tag_with.*/)
+    end
+
+    def self.method_missing(name, *args, &block)
+       if name.to_s =~ /^tag_with_[A-Za-z]+\w*/
+         operator = nil
+         methods = []
+         name.to_s.scan /(([A-Za-z]+)_?(and|or)?)+/ do |match|
+             operator ||= match[2]
+             methods << match[1]
+         end
+         
+         #define the method, so as to NOT default to method_missing next time, 'cause
+         #that's slow: the class needs to dispatch twice!
+         class_eval <<-RUBY
+            def self.#{name.to_s}(text, tokens={})
+                results = []
+                #{
+                    methods.collect do |m|
+                        %Q{
+                          #{"return results.flatten! unless results.empty?" if operator == "or"}
+                          response = send("tag_with_#{m}".to_sym, text, tokens["#{m}".to_sym])
+                          results << response if response and !response.empty?
+                        }
+                    end
+                }
+                results.flatten!
+            end
+         RUBY
+         send name, *args
+       else
+           super
+       end
+    end
+
 end #of webtagger module
