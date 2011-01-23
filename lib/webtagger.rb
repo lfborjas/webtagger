@@ -31,9 +31,9 @@ class WebTagger
 
                 r = Net::HTTP.post_form URI.parse(opts[:uri]), query
 
-                response = if opts[:json] then JSON.parse(r.body) else r.body end
                 if (100..399) === r.code.to_i
-                    @@cache[text_digest] = response
+                    response = if opts[:json] then JSON.parse(r.body) else r.body end
+                    @@cache[text_digest] = response 
                     callback.call(response)
                 else
                     callback.call(nil)
